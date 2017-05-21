@@ -61,7 +61,7 @@ public class GroovyWrapperMain {
         wrapperExecutor.execute(
                 args,
                 new Install(logger, new Download(logger, "gradlew", wrapperVersion()), new PathAssembler(gradleUserHome)),
-                new BootstrapMainStarter());
+                new GroovyBootstrapMainStarter());
     }
 
     private static void addSystemProperties(File gradleHome, File rootDir) {

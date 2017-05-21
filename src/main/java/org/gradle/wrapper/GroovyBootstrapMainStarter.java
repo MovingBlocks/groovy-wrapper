@@ -21,12 +21,13 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-public class BootstrapMainStarter {
+public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
+    @Override
     public void start(String[] args, File gradleHome) throws Exception {
-        File gradleJar = findLauncherJar(gradleHome);
-        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{gradleJar.toURI().toURL()}, ClassLoader.getSystemClassLoader().getParent());
+        File groovyJar = findGroovyJar(gradleHome);
+        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{groovyJar.toURI().toURL()}, ClassLoader.getSystemClassLoader().getParent());
         Thread.currentThread().setContextClassLoader(contextClassLoader);
-        Class<?> mainClass = contextClassLoader.loadClass("org.gradle.launcher.GradleMain");
+        Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
         Method mainMethod = mainClass.getMethod("main", String[].class);
         mainMethod.invoke(null, new Object[]{args});
         if (contextClassLoader instanceof Closeable) {
@@ -34,12 +35,12 @@ public class BootstrapMainStarter {
         }
     }
 
-    private File findLauncherJar(File gradleHome) {
+    private File findGroovyJar(File gradleHome) {
         for (File file : new File(gradleHome, "lib").listFiles()) {
-            if (file.getName().matches("gradle-launcher-.*\\.jar")) {
+            if (file.getName().matches("groovy-all-.*\\.jar")) {
                 return file;
             }
         }
-        throw new RuntimeException(String.format("Could not locate the Gradle launcher JAR in Gradle distribution '%s'.", gradleHome));
+        throw new RuntimeException(String.format("Could not locate the Groovy JAR in Gradle distribution '%s'.", gradleHome));
     }
 }
