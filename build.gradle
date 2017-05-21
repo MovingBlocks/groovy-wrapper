@@ -1,0 +1,5 @@
+apply plugin: 'java'
+
+dependencies {
+    compile files('gradle/wrapper/gradle-wrapper.jar')
+}

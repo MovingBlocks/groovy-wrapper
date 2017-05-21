@@ -8,3 +8,6 @@
 !.gitattributes
 !.gitignore
 !.github
+
+# Ignore built Java stuff
+build/
