@@ -1,0 +1,10 @@
+# Ignore general
+*~
+._*
+*.bak
+/.*
+
+# Except this stuff
+!.gitattributes
+!.gitignore
+!.github
