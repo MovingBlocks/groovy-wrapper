@@ -3,3 +3,27 @@ apply plugin: 'java'
 dependencies {
     compile files('gradle/wrapper/gradle-wrapper.jar')
 }
+
+clean.doLast {
+    project.file('gradle/wrapper/groovy-wrapper.jar').delete()
+}
+
+task copyToWrapperDir(type: Copy) {
+    description 'Copies the Groovy wrapper binary to its runtime home with the Graddle wrapper'
+    from "$buildDir/libs/groovy-wrapper.jar"
+    into 'gradle/wrapper'
+}
+
+task distZip(type: Zip) {
+    description 'Makes a zip file containing just the Groovy wrapper binary and scripts'
+    dependsOn build
+    from 'gradle/wrapper/groovy-wrapper.jar'
+    from 'groovyw'
+    from 'groovyw.bat'
+}
+
+task prep {
+    description 'Simply builds and makes sure the groovy wrapper jar is in place for local execution'
+    dependsOn build
+    dependsOn copyToWrapperDir
+}
