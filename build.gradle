@@ -8,13 +8,15 @@ dependencies {
 
 task copyToWrapperDir(type: Copy) {
     description 'Copies the Groovy wrapper binary to its runtime home with the Graddle wrapper'
-    from "$buildDir/libs/groovy-wrapper.jar"
+    dependsOn build
+    from jar
     into 'gradle/wrapper'
+    rename "-${version}", ""
 }
 
 task distZip(type: Zip) {
     description 'Makes a zip file containing just the Groovy wrapper binary and scripts'
-    dependsOn build
+    dependsOn copyToWrapperDir
     from 'gradle/wrapper/groovy-wrapper.jar'
     from 'groovyw'
     from 'groovyw.bat'

@@ -25,7 +25,8 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
     @Override
     public void start(String[] args, File gradleHome) throws Exception {
         File groovyJar = findGroovyJar(gradleHome);
-        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{groovyJar.toURI().toURL()}, ClassLoader.getSystemClassLoader().getParent());
+        File ivyJar = findIvyJar(gradleHome);
+        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{groovyJar.toURI().toURL(),ivyJar.toURI().toURL()}, ClassLoader.getSystemClassLoader().getParent());
         Thread.currentThread().setContextClassLoader(contextClassLoader);
         Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
         Method mainMethod = mainClass.getMethod("main", String[].class);
@@ -42,5 +43,14 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
             }
         }
         throw new RuntimeException(String.format("Could not locate the Groovy JAR in Gradle distribution '%s'.", gradleHome));
+    }
+
+    private File findIvyJar(File gradleHome) {
+        for (File file : new File(gradleHome, "lib/plugins").listFiles()) {
+            if (file.getName().matches("ivy-.*\\.jar")) {
+                return file;
+            }
+        }
+        throw new RuntimeException(String.format("Could not locate the Ivy JAR in Gradle distribution '%s'.", gradleHome));
     }
 }
