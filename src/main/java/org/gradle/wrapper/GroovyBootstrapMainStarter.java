@@ -24,9 +24,16 @@ import java.net.URLClassLoader;
 public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
     @Override
     public void start(String[] args, File gradleHome) throws Exception {
-        File groovyJar = findGroovyJar(gradleHome);
-        File ivyJar = findIvyJar(gradleHome);
-        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{groovyJar.toURI().toURL(),ivyJar.toURI().toURL()}, ClassLoader.getSystemClassLoader().getParent());
+        File groovyJar = findJar("groovy-all", gradleHome, "lib");
+        File ivyJar = findJar("ivy", gradleHome, "lib/plugins");
+        File cliJar = findJar("commons-cli", gradleHome, "lib/plugins");
+        File junitJar = findJar("junit", gradleHome, "lib/plugins");
+        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{
+                groovyJar.toURI().toURL()
+                ,ivyJar.toURI().toURL()
+                ,cliJar.toURI().toURL()
+                ,junitJar.toURI().toURL()
+                }, ClassLoader.getSystemClassLoader().getParent());
         Thread.currentThread().setContextClassLoader(contextClassLoader);
         Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
         Method mainMethod = mainClass.getMethod("main", String[].class);
@@ -36,21 +43,12 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
         }
     }
 
-    private File findGroovyJar(File gradleHome) {
-        for (File file : new File(gradleHome, "lib").listFiles()) {
-            if (file.getName().matches("groovy-all-.*\\.jar")) {
+    private File findJar(String fragment, File gradleHome, String subdir) {
+        for (File file : new File(gradleHome, subdir).listFiles()) {
+            if (file.getName().matches(fragment + "-.*\\.jar")) {
                 return file;
             }
         }
-        throw new RuntimeException(String.format("Could not locate the Groovy JAR in Gradle distribution '%s'.", gradleHome));
-    }
-
-    private File findIvyJar(File gradleHome) {
-        for (File file : new File(gradleHome, "lib/plugins").listFiles()) {
-            if (file.getName().matches("ivy-.*\\.jar")) {
-                return file;
-            }
-        }
-        throw new RuntimeException(String.format("Could not locate the Ivy JAR in Gradle distribution '%s'.", gradleHome));
+        throw new RuntimeException(String.format("Could not locate the JAR for " + fragment + " in Gradle distribution '%s'.", gradleHome));
     }
 }
