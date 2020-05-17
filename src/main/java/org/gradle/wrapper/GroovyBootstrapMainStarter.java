@@ -26,7 +26,6 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
         final URL[] urls = {
                 findJar("groovy-all", gradleHome, "lib"),
                 findJar("ivy", gradleHome, "lib/plugins"),
-                findJar("commons-cli", gradleHome, "lib/plugins"),
                 findJar("junit", gradleHome, "lib/plugins")
         };
         try (URLClassLoader contextClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().getParent())) {
