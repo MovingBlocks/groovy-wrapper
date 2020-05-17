@@ -15,7 +15,7 @@ Pick one of the below options:
     * `groovyw` and/or `groovyw.bat` should live next to their Gradle variants in the root of a project
 * Download a zip file from the Releases tab, extract, place the files accordingly into a local workspace
 * Build your own by cloning this repo and running `gradlew jar` to get a fresh `groovy-wrapper.jar` of your own
-    * You can run `gradlew prep` to both build and place the jar under `gradle/wrapper` where it can be tested with `groovyw test`
+    * You can run `gradlew prep` to both build and place the jar under `gradle/wrapper` where it can be tested with `groovyw Test`
     * For convenience a built version is already maintained there for easy testing
 
 ## Gradle
