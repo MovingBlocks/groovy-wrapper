@@ -21,7 +21,6 @@ import org.gradle.cli.ParsedCommandLine;
 import org.gradle.cli.SystemPropertiesCommandLineConverter;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -55,13 +54,23 @@ public class GroovyWrapperMain {
 
         addSystemProperties(gradleUserHome, rootDir);
 
-        Logger logger = logger(options);
+        WrapperConfiguration config = WrapperExecutor.forWrapperPropertiesFile(propertiesFile).getConfiguration();
+        PathAssembler.LocalDistribution localDist = new PathAssembler(gradleUserHome).getDistribution(config);
+        File gradleHome = getAndVerifyDistributionRoot(localDist.getDistributionDir());
 
-        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile(propertiesFile);
-        wrapperExecutor.execute(
-                args,
-                new Install(logger, new Download(logger, "gradlew", wrapperVersion()), new PathAssembler(gradleUserHome)),
-                new GroovyBootstrapMainStarter());
+        new GroovyBootstrapMainStarter().start(args, gradleHome);
+    }
+
+    static File getAndVerifyDistributionRoot(File distDir) {
+        // Extracted from org.gradle.wrapper.Install.getAndVerifyDistributionRoot
+        java.io.File[] dirs = distDir.listFiles(File::isDirectory);
+        assert dirs != null: "directory does not exist: " + distDir;
+        if (dirs.length != 1) {
+            throw new RuntimeException(String.format("Gradle distribution '%s' contains %d directories. " +
+                    "Expected to find exactly 1 directory.", distDir, dirs.length));
+        } else {
+            return dirs[0];
+        }
     }
 
     private static void addSystemProperties(File gradleHome, File rootDir) {
@@ -90,36 +99,10 @@ public class GroovyWrapperMain {
         return new File(location.getPath());
     }
 
-    static String wrapperVersion() {
-        try {
-            InputStream resourceAsStream = GradleWrapperMain.class.getResourceAsStream("/build-receipt.properties");
-            if (resourceAsStream == null) {
-                throw new RuntimeException("No build receipt resource found.");
-            }
-            Properties buildReceipt = new Properties();
-            try {
-                buildReceipt.load(resourceAsStream);
-                String versionNumber = buildReceipt.getProperty("versionNumber");
-                if (versionNumber == null) {
-                    throw new RuntimeException("No version number specified in build receipt resource.");
-                }
-                return versionNumber;
-            } finally {
-                resourceAsStream.close();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Could not determine wrapper version.", e);
-        }
-    }
-
     private static File gradleUserHome(ParsedCommandLine options) {
         if (options.hasOption(GRADLE_USER_HOME_OPTION)) {
             return new File(options.option(GRADLE_USER_HOME_OPTION).getValue());
         }
         return GradleUserHomeLookup.gradleUserHome();
-    }
-
-    private static Logger logger(ParsedCommandLine options) {
-        return new Logger(options.hasOption(GRADLE_QUIET_OPTION));
     }
 }
