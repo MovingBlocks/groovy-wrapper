@@ -15,7 +15,6 @@
  */
 package org.gradle.wrapper;
 
-import java.io.Closeable;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -24,31 +23,38 @@ import java.net.URLClassLoader;
 public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
     @Override
     public void start(String[] args, File gradleHome) throws Exception {
-        File groovyJar = findJar("groovy-all", gradleHome, "lib");
-        File ivyJar = findJar("ivy", gradleHome, "lib/plugins");
-        File cliJar = findJar("commons-cli", gradleHome, "lib/plugins");
-        File junitJar = findJar("junit", gradleHome, "lib/plugins");
-        URLClassLoader contextClassLoader = new URLClassLoader(new URL[]{
-                groovyJar.toURI().toURL()
-                ,ivyJar.toURI().toURL()
-                ,cliJar.toURI().toURL()
-                ,junitJar.toURI().toURL()
-                }, ClassLoader.getSystemClassLoader().getParent());
-        Thread.currentThread().setContextClassLoader(contextClassLoader);
-        Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
-        Method mainMethod = mainClass.getMethod("main", String[].class);
-        mainMethod.invoke(null, new Object[]{args});
-        if (contextClassLoader instanceof Closeable) {
-            ((Closeable) contextClassLoader).close();
+        final URL[] urls = {
+                findJar("groovy-all", gradleHome, "lib"),
+                findJar("ivy", gradleHome, "lib/plugins"),
+                findJar("commons-cli", gradleHome, "lib/plugins"),
+                findJar("junit", gradleHome, "lib/plugins")
+        };
+        try (URLClassLoader contextClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().getParent())) {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+            Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
+            Method mainMethod = mainClass.getMethod("main", String[].class);
+            mainMethod.invoke(null, new Object[]{args});
         }
     }
 
-    private File findJar(String fragment, File gradleHome, String subdir) {
-        for (File file : new File(gradleHome, subdir).listFiles()) {
-            if (file.getName().matches(fragment + "-.*\\.jar")) {
-                return file;
+    private URL findJar(String fragment, File gradleHome, String subdir) {
+        final File gradleSubdir = new File(gradleHome, subdir);
+        final File[] files = gradleSubdir.listFiles((d, name) ->
+            name.startsWith(fragment + "-") && name.endsWith(".jar")
+        );
+        if (files == null) {
+            throw new RuntimeException(String.format("Could not locate the JAR for %s; no such directory '%s'.",
+                    fragment, gradleSubdir));
+        } else if (files.length == 0) {
+            throw new RuntimeException(String.format("Could not locate the JAR for %s in Gradle distribution '%s'.",
+                    fragment, gradleHome));
+        } else {
+            try {
+                return files[0].toURI().toURL();
+            } catch (java.net.MalformedURLException e) {
+                // This is so unlikely, let's keep it out of the signature.
+                throw new RuntimeException(e.getMessage(),e);
             }
         }
-        throw new RuntimeException(String.format("Could not locate the JAR for " + fragment + " in Gradle distribution '%s'.", gradleHome));
     }
 }
