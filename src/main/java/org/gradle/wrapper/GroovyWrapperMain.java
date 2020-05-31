@@ -54,23 +54,13 @@ public class GroovyWrapperMain {
 
         addSystemProperties(gradleUserHome, rootDir);
 
-        WrapperConfiguration config = WrapperExecutor.forWrapperPropertiesFile(propertiesFile).getConfiguration();
-        PathAssembler.LocalDistribution localDist = new PathAssembler(gradleUserHome).getDistribution(config);
-        File gradleHome = getAndVerifyDistributionRoot(localDist.getDistributionDir());
+        Logger logger = logger(options);
 
-        new GroovyBootstrapMainStarter().start(args, gradleHome);
-    }
-
-    static File getAndVerifyDistributionRoot(File distDir) {
-        // Extracted from org.gradle.wrapper.Install.getAndVerifyDistributionRoot
-        java.io.File[] dirs = distDir.listFiles(File::isDirectory);
-        assert dirs != null: "directory does not exist: " + distDir;
-        if (dirs.length != 1) {
-            throw new RuntimeException(String.format("Gradle distribution '%s' contains %d directories. " +
-                    "Expected to find exactly 1 directory.", distDir, dirs.length));
-        } else {
-            return dirs[0];
-        }
+        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile(propertiesFile);
+        wrapperExecutor.execute(
+                args,
+                new Install(logger, new Download(logger, "gradlew", org.gradle.wrapper.Download.UNKNOWN_VERSION), new PathAssembler(gradleUserHome)),
+                new GroovyBootstrapMainStarter());
     }
 
     private static void addSystemProperties(File gradleHome, File rootDir) {
@@ -104,5 +94,9 @@ public class GroovyWrapperMain {
             return new File(options.option(GRADLE_USER_HOME_OPTION).getValue());
         }
         return GradleUserHomeLookup.gradleUserHome();
+    }
+
+    private static Logger logger(ParsedCommandLine options) {
+        return new Logger(options.hasOption(GRADLE_QUIET_OPTION));
     }
 }

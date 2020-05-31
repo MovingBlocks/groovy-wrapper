@@ -18,6 +18,16 @@ Pick one of the below options:
     * You can run `gradlew prep` to both build and place the jar under `gradle/wrapper` where it can be tested with `groovyw Test`
     * For convenience a built version is already maintained there for easy testing
 
+## Versions
+
+As of Gradle v6.4 the code innards the Groovy Wrapper relies on finally changed - this was an expected future and just a question of time.
+
+As a consequence a v2 of this wrapper has been prepared and built, and can be used with Gradle 6.4 and onwards, to the next unknown future point of breakage.
+
+However, that may not work with *older* Gradles, so you may have to use one or the other. 
+
+Additionally the 6.4 Gradle no longer ships with `commons-io` so we can't well put that on the Groovy Wrapper's classpath anymore. Sorry [#2](https://github.com/MovingBlocks/groovy-wrapper/issues/2) ! 
+
 ## Gradle
 
 Yep, it is Gradles all the way down :-)
