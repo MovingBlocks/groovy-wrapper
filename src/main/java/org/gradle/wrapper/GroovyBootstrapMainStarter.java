@@ -28,7 +28,7 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
                 findJar("ivy", gradleHome, "lib/plugins"),
                 findJar("junit", gradleHome, "lib/plugins")
         };
-        try (URLClassLoader contextClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().getParent())) {
+        try (URLClassLoader contextClassLoader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader())) {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
             Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
             Method mainMethod = mainClass.getMethod("main", String[].class);
