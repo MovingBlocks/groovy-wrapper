@@ -19,16 +19,17 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
     @Override
     public void start(String[] args, File gradleHome) throws Exception {
-        final URL[] urls = {
-                findJar("groovy-all", gradleHome, "lib"),
-                findJar("ivy", gradleHome, "lib/plugins"),
-                findJar("junit", gradleHome, "lib/plugins")
-        };
-        try (URLClassLoader contextClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().getParent())) {
+        final List<URL> urls = new ArrayList<>();
+        urls.addAll(findJars("groovy", gradleHome, "lib"));
+        urls.add(findJars("ivy", gradleHome, "lib/plugins").get(0));
+        urls.add(findJars("junit", gradleHome, "lib/plugins").get(0));
+        try (URLClassLoader contextClassLoader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader().getParent())) {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
             Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
             Method mainMethod = mainClass.getMethod("main", String[].class);
@@ -36,7 +37,7 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
         }
     }
 
-    private URL findJar(String fragment, File gradleHome, String subdir) {
+    private List<URL> findJars(String fragment, File gradleHome, String subdir) {
         final File gradleSubdir = new File(gradleHome, subdir);
         final File[] files = gradleSubdir.listFiles((d, name) ->
             name.startsWith(fragment + "-") && name.endsWith(".jar")
@@ -49,7 +50,11 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
                     fragment, gradleHome));
         } else {
             try {
-                return files[0].toURI().toURL();
+                final List<URL> urls = new ArrayList<>();
+                for (File file : files) {
+                    urls.add(file.toURI().toURL());
+                }
+                return urls;
             } catch (java.net.MalformedURLException e) {
                 // This is so unlikely, let's keep it out of the signature.
                 throw new RuntimeException(e.getMessage(),e);
