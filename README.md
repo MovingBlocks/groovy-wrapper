@@ -2,7 +2,7 @@
 
 This is a tiny extension for the [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) that provides a similar `groovyw` utility script to go along with `gradlew`, using the Groovy embedded with the associated version of Gradle to instead execute a plain `.groovy` script.
 
-Executing either `gradlew` or `groovyw` for the first time for a given version will download the Gradle distribution normally. Either script will use the same local files.
+Executing either `gradlew` or `groovyw` (preceded with `./` if needed) for the first time for a given version will download the Gradle distribution normally. Either script will use the same local files.
 
 This should make using a mix of Gradle and Groovy scripts in a project very convenient as you do not need to manually install Gradle *or* Groovy, and both will be using the same version of Groovy.
 
@@ -20,13 +20,19 @@ Pick one of the below options:
 
 ## Versions
 
+### v2.0
+
 As of Gradle v6.4 the code innards the Groovy Wrapper relies on finally changed - this was an expected future and just a question of time.
 
 As a consequence a v2 of this wrapper has been prepared and built, and can be used with Gradle 6.4 and onwards, to the next unknown future point of breakage.
 
 However, that may not work with *older* Gradles, so you may have to use one or the other. 
 
-Additionally the 6.4 Gradle no longer ships with `commons-io` so we can't well put that on the Groovy Wrapper's classpath anymore. Sorry [#2](https://github.com/MovingBlocks/groovy-wrapper/issues/2) ! 
+Additionally, the 6.4 Gradle no longer ships with `commons-io` so we can't well put that on the Groovy Wrapper's classpath anymore. Sorry [#2](https://github.com/MovingBlocks/groovy-wrapper/issues/2) ! 
+
+### v2.1
+
+This bump was needed as Gradle v7 changed how Groovy is embedded, now in multiple modular jars. It should be backwards compatible.
 
 ## Gradle
 
