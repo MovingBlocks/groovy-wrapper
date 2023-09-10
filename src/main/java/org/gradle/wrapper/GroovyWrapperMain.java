@@ -59,7 +59,7 @@ public class GroovyWrapperMain {
         WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile(propertiesFile);
         wrapperExecutor.execute(
                 args,
-                new Install(logger, new Download(logger, "gradlew", org.gradle.wrapper.Download.UNKNOWN_VERSION), new PathAssembler(gradleUserHome)),
+                new Install(logger, new Download(logger, "gradlew", org.gradle.wrapper.Download.UNKNOWN_VERSION), new PathAssembler(gradleUserHome, rootDir)),
                 new GroovyBootstrapMainStarter());
     }
 

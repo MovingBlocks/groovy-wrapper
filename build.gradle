@@ -3,7 +3,7 @@ apply plugin: 'java'
 version = '2.1.0'
 
 dependencies {
-    compile files('gradle/wrapper/gradle-wrapper.jar')
+    implementation files('gradle/wrapper/gradle-wrapper.jar')
 }
 
 task copyToWrapperDir(type: Copy) {
