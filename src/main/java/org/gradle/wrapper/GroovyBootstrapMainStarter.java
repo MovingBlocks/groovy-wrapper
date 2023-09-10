@@ -27,7 +27,7 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
     public void start(String[] args, File gradleHome) throws Exception {
         final List<URL> urls = new ArrayList<>();
         urls.addAll(findJars("groovy", gradleHome, "lib"));
-        urls.add(findJars("ivy", gradleHome, "lib").get(0));
+        urls.add(findJars("ivy", gradleHome, "lib/plugins").get(0));
         urls.add(findJars("junit", gradleHome, "lib").get(0));
         try (URLClassLoader contextClassLoader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader().getParent())) {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
