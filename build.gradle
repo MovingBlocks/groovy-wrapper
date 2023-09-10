@@ -7,7 +7,7 @@ dependencies {
 }
 
 task copyToWrapperDir(type: Copy) {
-    description 'Copies the Groovy wrapper binary to its runtime home with the Graddle wrapper'
+    description 'Copies the Groovy wrapper binary to its runtime home with the Gradle wrapper'
     dependsOn build
     from jar
     into 'gradle/wrapper'
@@ -23,7 +23,7 @@ task distZip(type: Zip) {
 }
 
 task prep {
-    description 'Simply builds and makes sure the groovy wrapper jar is in place for local execution'
+    description 'Simply builds and makes sure the Groovy wrapper jar is in place for local execution'
     dependsOn build
     dependsOn copyToWrapperDir
 }
