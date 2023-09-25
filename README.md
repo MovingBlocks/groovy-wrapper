@@ -17,6 +17,13 @@ Pick one of the below options:
 * Build your own by cloning this repo and running `gradlew jar` to get a fresh `groovy-wrapper.jar` of your own
     * You can run `gradlew prep` to both build and place the jar under `gradle/wrapper` where it can be tested with `groovyw Test`
     * For convenience a built version is already maintained there for easy testing
+ 
+When you have a working setup with the included test script you may want to customize a bit further, otherwise you have to always type `groovyw [scriptname]` and have to keep files in the root of the working directory or include a path in your command. [Terasology](https://github.com/MovingBlocks/Terasology) serves as a useful example. Look at the `groovyw` and `groovyw.bat` files in this repo and the example and you will find something like the following (considering usual differences between Windows and Linux style - adjust both files if you want compatibility on both OS flavors):
+
+* `... org.gradle.wrapper.GroovyWrapperMain "$APP_ARGS"` - this tells Groovy to run whatever you pass on the command line
+* `... org.gradle.wrapper.GroovyWrapperMain config/groovy/util.groovy "$APP_ARGS"` - this has both a sub-path _and_ a target script to execute, meaning now the remaining arguments go to the target script directly
+
+As such a command like `groovyw Test` that previously ran a `Test.groovy` in the workspace root now can become `groovyw usage` which targets `config/groovy/util.groovy` and executes the `usage` method therein.
 
 ## Versions
 
