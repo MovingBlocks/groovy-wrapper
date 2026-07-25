@@ -28,7 +28,11 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
         final List<URL> urls = new ArrayList<>();
         urls.addAll(findJars("groovy", gradleHome, "lib"));
         urls.add(findJars("ivy", gradleHome, "lib/plugins").get(0));
-        urls.add(findJars("junit", gradleHome, "lib").get(0));
+        // JUnit is only needed by GroovyTestCase (see this project's Test.groovy), not to run ordinary
+        // Groovy scripts, and Gradle stopped shipping a junit jar in its distribution's lib/ as of
+        // Gradle 9. Treat it as optional so its absence doesn't fail the whole bootstrap - same
+        // situation as commons-io disappearing in Gradle 6.4 (issue #2).
+        urls.addAll(findJarsIfPresent("junit", gradleHome, "lib"));
         try (URLClassLoader contextClassLoader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader().getParent())) {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
             Class<?> mainClass = contextClassLoader.loadClass("groovy.ui.GroovyMain");
@@ -39,9 +43,7 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
 
     private List<URL> findJars(String fragment, File gradleHome, String subdir) {
         final File gradleSubdir = new File(gradleHome, subdir);
-        final File[] files = gradleSubdir.listFiles((d, name) ->
-            name.startsWith(fragment + "-") && name.endsWith(".jar")
-        );
+        final File[] files = matchingJars(fragment, gradleSubdir);
         if (files == null) {
             throw new RuntimeException(String.format("Could not locate the JAR for %s; no such directory '%s'.",
                     fragment, gradleSubdir));
@@ -49,16 +51,38 @@ public class GroovyBootstrapMainStarter extends BootstrapMainStarter {
             throw new RuntimeException(String.format("Could not locate the JAR for %s in Gradle distribution '%s'.",
                     fragment, gradleHome));
         } else {
-            try {
-                final List<URL> urls = new ArrayList<>();
-                for (File file : files) {
-                    urls.add(file.toURI().toURL());
-                }
-                return urls;
-            } catch (java.net.MalformedURLException e) {
-                // This is so unlikely, let's keep it out of the signature.
-                throw new RuntimeException(e.getMessage(),e);
+            return toUrls(files);
+        }
+    }
+
+    /**
+     * As {@link #findJars}, but yields an empty list instead of throwing when the directory or the jar
+     * is absent. For dependencies that some Gradle distributions ship and others do not.
+     */
+    private List<URL> findJarsIfPresent(String fragment, File gradleHome, String subdir) {
+        final File[] files = matchingJars(fragment, new File(gradleHome, subdir));
+        if (files == null || files.length == 0) {
+            return new ArrayList<>();
+        }
+        return toUrls(files);
+    }
+
+    private File[] matchingJars(String fragment, File gradleSubdir) {
+        return gradleSubdir.listFiles((d, name) ->
+            name.startsWith(fragment + "-") && name.endsWith(".jar")
+        );
+    }
+
+    private List<URL> toUrls(File[] files) {
+        try {
+            final List<URL> urls = new ArrayList<>();
+            for (File file : files) {
+                urls.add(file.toURI().toURL());
             }
+            return urls;
+        } catch (java.net.MalformedURLException e) {
+            // This is so unlikely, let's keep it out of the signature.
+            throw new RuntimeException(e.getMessage(),e);
         }
     }
 }

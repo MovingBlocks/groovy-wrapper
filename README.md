@@ -45,6 +45,29 @@ This bump was needed as Gradle v7 changed how Groovy is embedded, now in multipl
 
 Gradle v8 support. Unsure on backwards compatibility.
 
+### v2.3
+
+Gradle v9 support. Gradle 9 no longer ships a `junit` jar in its distribution's `lib/`, which the wrapper had been putting on the Groovy classpath unconditionally — so on Gradle 9 the bootstrap died with `Could not locate the JAR for junit in Gradle distribution '...'` before running anything. JUnit is only needed for `GroovyTestCase` (as used by this repo's own `Test.groovy`), not to run ordinary Groovy scripts, so it is now optional: used when the distribution provides it, skipped when it does not. Backwards compatible — on Gradle 8 and earlier the jar is still found and added exactly as before.
+
+Note that `Test.groovy` itself relies on `GroovyTestCase`, which needs that junit jar, so the bundled self-test only works on distributions that still ship one. Scripts that don't use `GroovyTestCase` — the normal case, e.g. Terasology's `config/groovy/util.groovy` — run fine on Gradle 9.
+
+**Do not pair v2.3 with a regenerated Gradle 9 `gradle-wrapper.jar` yet.** Point `distributionUrl` at a Gradle 9 distribution and keep your existing Gradle 8-era wrapper jar — that combination works. Running the canonical `gradlew wrapper --gradle-version 9.x`, which also regenerates the jar, breaks `groovyw` right away:
+
+```
+Error: Unable to initialize main class org.gradle.wrapper.GroovyWrapperMain
+Caused by: java.lang.NoClassDefFoundError: org/gradle/wrapper/IDownload
+```
+
+Gradle 9's wrapper jar dropped or moved four types this extension compiles against — `BootstrapMainStarter` (the superclass of `GroovyBootstrapMainStarter`; only a stray `BootstrapMainStarter$1` remains), `IDownload`, `SystemPropertiesCommandLineConverter`, and `SystemPropertiesHandler`. `WrapperExecutor`, `Install`, `Download`, `PathAssembler`, `Logger` and `GradleUserHomeLookup` are all still there, so this is a port of the two source files to the new wrapper internals rather than a rewrite — but it is more than a version bump, and it will want its own release. Until then the supported combination is:
+
+| Piece | Setting |
+|---|---|
+| `gradle-wrapper.properties` | Gradle 9 distribution URL ✅ |
+| `gradle-wrapper.jar` | existing Gradle 8-era jar — **do not regenerate** ⚠️ |
+| `groovy-wrapper.jar` | v2.3 ✅ |
+
+This is the wrinkle the "Gradle" section below has always warned about — the wrapper *jar*, not the distribution, is what this extension reaches into.
+
 ## Gradle
 
 Yep, it is Gradles all the way down :-)
@@ -52,6 +75,8 @@ Yep, it is Gradles all the way down :-)
 The Groovy Wrapper was based on Gradle 3.3 using the wrapper files embedded within this repo (retrieved via regular `gradlew wrapper` update) along with two edited Java source files from https://github.com/gradle/gradle/tree/master/subprojects/wrapper/src/main/java/org/gradle/wrapper that haven't been changed for some time.
 
 While primary testing was done with 3.3 you can vary the target Gradle version via `gradle/wrapper/gradle-wrapper.properties` normally and be using that Gradle (and its embedded Groovy) without trouble at least for some versions both back and forward. Older Gradle wrapper *jar* versions may not function and future changes may also become incompatible with this extension. Any upgrade is likely trivial in effort.
+
+Worth being precise about which of those two moving parts matters, since they upgrade independently. The **distribution** (what `distributionUrl` selects) supplies the Groovy that actually runs your scripts, and moving it forward is usually cheap — v2.0, v2.1, v2.2 and v2.3 were each a small reaction to something the distribution stopped shipping. The **wrapper jar** is different: this extension subclasses and calls its internals, so regenerating it can break compilation-level assumptions rather than just a missing jar on a classpath. As of Gradle 9 those two have diverged — see the v2.3 note above — so treat "bump the distribution" and "regenerate the wrapper jar" as separate decisions.
 
 ## License
 
