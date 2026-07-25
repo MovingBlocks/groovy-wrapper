@@ -45,6 +45,12 @@ This bump was needed as Gradle v7 changed how Groovy is embedded, now in multipl
 
 Gradle v8 support. Unsure on backwards compatibility.
 
+### v2.3
+
+Gradle v9 support. Gradle 9 no longer ships a `junit` jar in its distribution's `lib/`, which the wrapper had been putting on the Groovy classpath unconditionally — so on Gradle 9 the bootstrap died with `Could not locate the JAR for junit in Gradle distribution '...'` before running anything. JUnit is only needed for `GroovyTestCase` (as used by this repo's own `Test.groovy`), not to run ordinary Groovy scripts, so it is now optional: used when the distribution provides it, skipped when it does not. Backwards compatible — on Gradle 8 and earlier the jar is still found and added exactly as before.
+
+Note that `Test.groovy` itself relies on `GroovyTestCase`, which needs that junit jar, so the bundled self-test only works on distributions that still ship one. Scripts that don't use `GroovyTestCase` — the normal case, e.g. Terasology's `config/groovy/util.groovy` — run fine on Gradle 9.
+
 ## Gradle
 
 Yep, it is Gradles all the way down :-)
